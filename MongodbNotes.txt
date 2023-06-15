@@ -1,0 +1,152 @@
+MongoDb is a NoSql Databadse.
+In mongo each db can contain one or more collections.
+Now each collections can contain onre or more data structures called documents.
+Document based:- Mongo Db stores data in documents(field-value pair data structures, NoSql).
+Mongo Db uses a data format similar to Json for data storage called BSON.
+it looks similarlike JSON but it is typed meaning that itv will have a data type such as string, boolean.
+
+
+Two imp things:--
+1- The max size for each document is 16MB currently which may inc in future 
+2- Ech document contain a unique id, which acts as a primary key of that document. Its automatically generated with the object id data type each time there is a new document
+
+
+
+//Before using claas concept for the api.
+const getalltour = async (req, res) => {
+  try {
+    //Build Query
+    //1A Filtering data
+    // const queryObj = { ...req.query };
+    // const excludeFields = ["page", "sort", "limit", "fields"];
+    // excludeFields.forEach((el) => delete queryObj[el]);
+
+    // //BAdvance Filtering
+    // let queryStr = JSON.stringify(queryObj);
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // //using mongoose method
+    // //const tours = await Tour.find().where(duration).equals(5).where('difficulty).equals('easy)
+    // let query = Tour.find(JSON.parse(queryStr));
+
+    //2-Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+    //3- Field Limiting
+    if (req.query.fields) {
+      const fields = req.query.fields.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+    //4- Pagination
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) throw new Error("This page does not exist");
+    }
+    //Execute Query
+    const tours = await query;
+    //Send Response
+    res.status(200).json({
+      status: "success",
+      result: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
+//To get tour by id
+const gettourbyid = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    //Tour.findone({_id: req.params.id}) will work same as findbyid
+    res.status(200).json({
+      status: "success",
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: "no data",
+    });
+  }
+  //console.log(req.params);
+  // const id = req.params.id * 1;
+  // const tour = tours.find((el) => el.id === id);
+};
+
+//to add a tour in tour data
+const addtour = async (req, res) => {
+  try {
+    const newtour = await Tour.create(req.body);
+    res.status(200).json({
+      status: "success",
+      data: {
+        tour: newtour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "error",
+      message: err,
+    });
+  }
+};
+// res.status(201).json({
+//   status: "success",
+//   data: {
+//     tour: newtour,
+//   },
+//});
+//to update atour data
+const updatetour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.status(200).json({
+      status: "success",
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "error",
+      message: "err",
+    });
+  }
+};
+//to delete tour data
+const deletetour = async (req, res) => {
+  try {
+    //Here we are notv saving any data to a const because in restful api it is a common practice not to return any data to client while deleting anything.
+    await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: "deleted",
+      data: null,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "error",
+      message: err,
+    });
+  }
+};

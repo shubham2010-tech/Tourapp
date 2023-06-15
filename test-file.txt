@@ -1,0 +1,23 @@
+//Prameter middleware// to check the invalid id out of the main handler through a middleware
+const checkId = (req, res, next, val) => {
+  //const id = req.params.id * 1;
+  console.log(`the id is : ${val}`);
+  if (req.params.id * 1 > tours.length) {
+    return res.status(404).json({
+      status: "fail",
+      message: "no data found",
+    });
+  }
+  next();
+};
+
+//MIddleware to check that the name and price is there while creating the tour.
+const checkbody = (req, res, next) => {
+  if (!req.body.name || !req.body.price) {
+    return res.status(400).json({
+      status: "fail",
+      message: "missing name or  price",
+    });
+  }
+  next();
+};
