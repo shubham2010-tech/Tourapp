@@ -1,6 +1,7 @@
 // const fs = require("fs");
 const Tour = require("./../models/tourModel");
 const apiFeatures = require("./../utils/apiFeatures");
+const appError = require("../utils/appError");
 
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
@@ -39,6 +40,9 @@ const getalltour = async (req, res) => {
 const gettourbyid = async (req, res) => {
   try {
     const tour = await Tour.findById(req.params.id);
+    if (!tour) {
+      return next(new appError("No tour found with that id", 404));
+    }
     //Tour.findone({_id: req.params.id}) will work same as findbyid
     res.status(200).json({
       status: "success",
