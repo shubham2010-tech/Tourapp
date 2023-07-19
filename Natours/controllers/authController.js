@@ -75,11 +75,12 @@ const Protect = catchAsync(async (req, res, next) => {
       new appError("You are not logged in, please login to get access", 401)
     );
   }
-  //2-verify the token with the older signature token
+  //2-verify the token with the older signature token--- verify that if no one altered the id that's in the payload  of this token
   const Decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  console.log(Decoded);
+  //console.log(Decoded);
 
   //3-check if user still exists
+  const freshUser = await User.findById(Decoded.id);
 
   //4-check wether the user changed password after the token was issued
   next();
